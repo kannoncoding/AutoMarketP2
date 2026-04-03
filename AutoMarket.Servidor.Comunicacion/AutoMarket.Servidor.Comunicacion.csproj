@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AutoMarket.Entidades\AutoMarket.Entidades.csproj" />
+    <ProjectReference Include="..\AutoMarket.Servidor.Logica\AutoMarket.Servidor.Logica.csproj" />
+  </ItemGroup>
+
 </Project>
