@@ -25,9 +25,9 @@ namespace AutoMarket.Entidades
             get => _idVenta;
             set
             {
-                if (value <= 0)
+                if (value < 0)
                 {
-                    throw new ArgumentException("El id de la venta debe ser mayor que cero.");
+                    throw new ArgumentException("El id de la venta no puede ser negativo.");
                 }
 
                 _idVenta = value;
@@ -57,24 +57,17 @@ namespace AutoMarket.Entidades
             get => _fechaVenta;
             set
             {
-                DateTime fechaNormalizada = value.Date;
-
                 if (value == DateTime.MinValue)
                 {
                     throw new ArgumentException("La fecha de la venta es obligatoria.");
                 }
 
-                if (fechaNormalizada > DateTime.Today)
+                if (value > DateTime.Now)
                 {
                     throw new ArgumentException("La fecha de la venta no puede ser futura.");
                 }
 
-                if (_cliente != null && fechaNormalizada < _cliente.FechaRegistro.Date)
-                {
-                    throw new ArgumentException("La fecha de la venta no puede ser anterior a la fecha de registro del cliente.");
-                }
-
-                _fechaVenta = fechaNormalizada;
+                _fechaVenta = value;
             }
         }
 
@@ -108,9 +101,20 @@ namespace AutoMarket.Entidades
             Monto = monto;
         }
 
+        public Venta(
+            Cliente cliente,
+            Sucursal sucursal,
+            Vehiculo vehiculo,
+            DateTime fechaVenta,
+            decimal monto)
+            : this(0, cliente, sucursal, vehiculo, fechaVenta, monto)
+        {
+        }
+
         public override string ToString()
         {
-            return IdVenta + " - " + Cliente.NombreCompleto + " - " + Vehiculo.Marca + " " + Vehiculo.Modelo;
+            string textoIdVenta = IdVenta > 0 ? IdVenta.ToString() : "Nueva venta";
+            return textoIdVenta + " - " + Cliente.NombreCompleto + " - " + Vehiculo.Marca + " " + Vehiculo.Modelo;
         }
     }
 }
