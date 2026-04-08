@@ -69,6 +69,9 @@ VALUES
             if (!ExisteId(vehiculo.IdVehiculo))
                 throw new InvalidOperationException("El vehículo no existe.");
 
+            if (!ExisteCategoria(vehiculo.Categoria.IdCategoria))
+                throw new InvalidOperationException("La categoría asociada no existe.");
+
             const string sql = @"
 UPDATE Vehiculo
 SET Marca=@Marca,
