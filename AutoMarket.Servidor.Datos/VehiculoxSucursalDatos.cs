@@ -33,6 +33,12 @@ namespace AutoMarket.Servidor.Datos
             if (relacion == null)
                 throw new ArgumentNullException(nameof(relacion));
 
+            if (relacion.Sucursal.IdSucursal <= 0)
+                throw new ArgumentException("La sucursal asociada es inválida.", nameof(relacion));
+
+            if (relacion.Vehiculo.IdVehiculo <= 0)
+                throw new ArgumentException("El vehículo asociado es inválido.", nameof(relacion));
+
             if (ExisteRelacion(relacion.Sucursal.IdSucursal, relacion.Vehiculo.IdVehiculo))
                 throw new InvalidOperationException("La relación ya existe.");
 
@@ -56,6 +62,12 @@ VALUES
 
         public void ActualizarCantidad(int idSucursal, int idVehiculo, int nuevaCantidad)
         {
+            if (idSucursal <= 0)
+                throw new ArgumentException("El id de la sucursal debe ser mayor que cero.", nameof(idSucursal));
+
+            if (idVehiculo <= 0)
+                throw new ArgumentException("El id del vehículo debe ser mayor que cero.", nameof(idVehiculo));
+
             if (nuevaCantidad < 0)
                 throw new ArgumentException("Cantidad inválida.");
 
@@ -81,6 +93,12 @@ WHERE IdSucursal = @IdSucursal AND IdVehiculo = @IdVehiculo;";
 
         public void Eliminar(int idSucursal, int idVehiculo)
         {
+            if (idSucursal <= 0)
+                throw new ArgumentException("El id de la sucursal debe ser mayor que cero.", nameof(idSucursal));
+
+            if (idVehiculo <= 0)
+                throw new ArgumentException("El id del vehículo debe ser mayor que cero.", nameof(idVehiculo));
+
             const string sql = @"
 DELETE FROM VehiculoxSucursal
 WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
@@ -97,13 +115,21 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
 
         public VehiculoxSucursal? ObtenerRelacion(int idSucursal, int idVehiculo)
         {
+            if (idSucursal <= 0)
+                throw new ArgumentException("El id de la sucursal debe ser mayor que cero.", nameof(idSucursal));
+
+            if (idVehiculo <= 0)
+                throw new ArgumentException("El id del vehículo debe ser mayor que cero.", nameof(idVehiculo));
+
             const string sql = @"
 SELECT vs.Cantidad,
        s.IdSucursal, s.Nombre, s.Direccion, s.Telefono, s.Activo,
+       vd.IdVendedor, vd.Identificacion, vd.NombreCompleto, vd.FechaNacimiento, vd.FechaIngreso, vd.Telefono AS TelefonoVendedor,
        v.IdVehiculo, v.Marca, v.Modelo, v.Anio, v.Precio, v.Estado,
        c.IdCategoria, c.NombreCategoria, c.Descripcion
 FROM VehiculoxSucursal vs
 INNER JOIN Sucursal s ON vs.IdSucursal = s.IdSucursal
+INNER JOIN Vendedor vd ON s.IdVendedor = vd.IdVendedor
 INNER JOIN Vehiculo v ON vs.IdVehiculo = v.IdVehiculo
 INNER JOIN CategoriaVehiculo c ON v.IdCategoria = c.IdCategoria
 WHERE vs.IdSucursal=@IdSucursal AND vs.IdVehiculo=@IdVehiculo;";
@@ -135,12 +161,21 @@ WHERE vs.IdSucursal=@IdSucursal AND vs.IdVehiculo=@IdVehiculo;";
                     Convert.ToChar(dr["Estado"])
                 );
 
+                var vendedor = new Vendedor(
+                    Convert.ToInt32(dr["IdVendedor"]),
+                    dr["Identificacion"].ToString() ?? "",
+                    dr["NombreCompleto"].ToString() ?? "",
+                    Convert.ToDateTime(dr["FechaNacimiento"]),
+                    Convert.ToDateTime(dr["FechaIngreso"]),
+                    dr["TelefonoVendedor"].ToString() ?? ""
+                );
+
                 var sucursal = new Sucursal(
                     Convert.ToInt32(dr["IdSucursal"]),
                     dr["Nombre"].ToString() ?? "",
                     dr["Direccion"].ToString() ?? "",
                     dr["Telefono"].ToString() ?? "",
-                    null!, // luego lo puedes mejorar si quieres traer vendedor
+                    vendedor,
                     Convert.ToBoolean(dr["Activo"])
                 );
 
@@ -156,13 +191,20 @@ WHERE vs.IdSucursal=@IdSucursal AND vs.IdVehiculo=@IdVehiculo;";
 
         public List<VehiculoxSucursal> ObtenerPorSucursal(int idSucursal)
         {
+            if (idSucursal <= 0)
+                throw new ArgumentException("El id de la sucursal debe ser mayor que cero.", nameof(idSucursal));
+
             List<VehiculoxSucursal> lista = new List<VehiculoxSucursal>();
 
             const string sql = @"
 SELECT vs.Cantidad,
+       s.IdSucursal, s.Nombre, s.Direccion, s.Telefono, s.Activo,
+       vd.IdVendedor, vd.Identificacion, vd.NombreCompleto, vd.FechaNacimiento, vd.FechaIngreso, vd.Telefono AS TelefonoVendedor,
        v.IdVehiculo, v.Marca, v.Modelo, v.Anio, v.Precio, v.Estado,
        c.IdCategoria, c.NombreCategoria, c.Descripcion
 FROM VehiculoxSucursal vs
+INNER JOIN Sucursal s ON vs.IdSucursal = s.IdSucursal
+INNER JOIN Vendedor vd ON s.IdVendedor = vd.IdVendedor
 INNER JOIN Vehiculo v ON vs.IdVehiculo = v.IdVehiculo
 INNER JOIN CategoriaVehiculo c ON v.IdCategoria = c.IdCategoria
 WHERE vs.IdSucursal=@IdSucursal;";
@@ -193,13 +235,22 @@ WHERE vs.IdSucursal=@IdSucursal;";
                     Convert.ToChar(dr["Estado"])
                 );
 
+                var vendedor = new Vendedor(
+                   Convert.ToInt32(dr["IdVendedor"]),
+                   dr["Identificacion"].ToString() ?? "",
+                   dr["NombreCompleto"].ToString() ?? "",
+                   Convert.ToDateTime(dr["FechaNacimiento"]),
+                   Convert.ToDateTime(dr["FechaIngreso"]),
+                   dr["TelefonoVendedor"].ToString() ?? ""
+               );
+
                 var sucursal = new Sucursal(
-                    idSucursal,
-                    "",
-                    "",
-                    "",
-                    null!,
-                    true
+                    Convert.ToInt32(dr["IdSucursal"]),
+                    dr["Nombre"].ToString() ?? "",
+                    dr["Direccion"].ToString() ?? "",
+                    dr["Telefono"].ToString() ?? "",
+                    vendedor,
+                    Convert.ToBoolean(dr["Activo"])
                 );
 
                 lista.Add(new VehiculoxSucursal(
@@ -214,6 +265,9 @@ WHERE vs.IdSucursal=@IdSucursal;";
 
         public bool ExisteRelacion(int idSucursal, int idVehiculo)
         {
+            if (idSucursal <= 0 || idVehiculo <= 0)
+                return false;
+
             const string sql = @"
 SELECT COUNT(1)
 FROM VehiculoxSucursal
@@ -231,6 +285,9 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
 
         public bool TieneStock(int idSucursal, int idVehiculo)
         {
+            if (idSucursal <= 0 || idVehiculo <= 0)
+                return false;
+
             const string sql = @"
 SELECT Cantidad
 FROM VehiculoxSucursal
@@ -245,7 +302,7 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
             cn.Open();
             object resultado = cmd.ExecuteScalar();
 
-            if (resultado == null)
+            if (resultado == null || resultado == DBNull.Value)
                 return false;
 
             return Convert.ToInt32(resultado) > 0;
@@ -253,6 +310,12 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
 
         public void DisminuirStock(int idSucursal, int idVehiculo)
         {
+            if (idSucursal <= 0)
+                throw new ArgumentException("El id de la sucursal debe ser mayor que cero.", nameof(idSucursal));
+
+            if (idVehiculo <= 0)
+                throw new ArgumentException("El id del vehículo debe ser mayor que cero.", nameof(idVehiculo));
+
             const string sql = @"
 UPDATE VehiculoxSucursal
 SET Cantidad = Cantidad - 1
