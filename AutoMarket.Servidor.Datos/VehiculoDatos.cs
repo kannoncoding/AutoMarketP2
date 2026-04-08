@@ -4,7 +4,7 @@ Cuatrimestre: I Cuatrimestre 2026
 Proyecto: AutoMarket - Proyecto #2
 Descripción: Clase de acceso a datos para administrar el CRUD de la entidad Vehiculo en SQL Server.
 Estudiante: Jorge Arias M
-Fecha de desarrollo: 2026-04-03
+Fecha de desarrollo: 2026-04-04
 */
 
 using System;
