@@ -57,17 +57,24 @@ namespace AutoMarket.Entidades
             get => _fechaVenta;
             set
             {
+                DateTime fechaNormalizada = value.Date;
+
                 if (value == DateTime.MinValue)
                 {
                     throw new ArgumentException("La fecha de la venta es obligatoria.");
                 }
 
-                if (value.Date > DateTime.Now.Date)
+                if (fechaNormalizada > DateTime.Today)
                 {
                     throw new ArgumentException("La fecha de la venta no puede ser futura.");
                 }
 
-                _fechaVenta = value;
+                if (_cliente != null && fechaNormalizada < _cliente.FechaRegistro.Date)
+                {
+                    throw new ArgumentException("La fecha de la venta no puede ser anterior a la fecha de registro del cliente.");
+                }
+
+                _fechaVenta = fechaNormalizada;
             }
         }
 
