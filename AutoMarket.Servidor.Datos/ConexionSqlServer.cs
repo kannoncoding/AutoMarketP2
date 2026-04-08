@@ -39,20 +39,20 @@ namespace AutoMarket.Servidor.Datos
 
         public void ProbarConexion()
         {
-            using (SqlConnection conexion = CrearConexion())
+            try
             {
-                try
+                using (SqlConnection conexion = CrearConexion())
                 {
                     conexion.Open();
                 }
-                catch (SqlException ex)
-                {
-                    throw new InvalidOperationException("No fue posible establecer la conexión con la base de datos SQL Server.", ex);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException("Ocurrió un error inesperado al intentar conectarse a la base de datos.", ex);
-                }
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException("No fue posible establecer la conexión con la base de datos SQL Server.", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Ocurrió un error inesperado al intentar conectarse a la base de datos.", ex);
             }
         }
     }
