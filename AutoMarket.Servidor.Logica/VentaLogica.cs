@@ -56,11 +56,7 @@ namespace AutoMarket.Servidor.Logica
 
             ValidarVenta(venta);
 
-            Cliente? clienteActivo = _clienteDatos.ObtenerClienteActivoPorIdentificacion(venta.Cliente.Identificacion);
-            if (clienteActivo == null)
-            {
-                throw new InvalidOperationException("El cliente no existe o no se encuentra activo.");
-            }
+            Cliente clienteActivo = ObtenerClienteActivoParaRegistrarVenta(venta);
 
             Sucursal? sucursal = _sucursalDatos.ObtenerPorId(venta.Sucursal.IdSucursal);
             if (sucursal == null)
@@ -282,6 +278,41 @@ namespace AutoMarket.Servidor.Logica
             {
                 throw new ArgumentException("La fecha de la venta no puede ser futura.");
             }
+        }
+
+        private Cliente ObtenerClienteActivoParaRegistrarVenta(Venta venta)
+        {
+            string identificacionNormalizada = venta.Cliente.Identificacion?.Trim() ?? string.Empty;
+            bool tieneIdentificacion = !string.IsNullOrWhiteSpace(identificacionNormalizada);
+            bool tieneIdCliente = venta.Cliente.IdCliente > 0;
+
+            Cliente? clientePorId = null;
+            if (tieneIdCliente)
+            {
+                clientePorId = _clienteDatos.ObtenerPorId(venta.Cliente.IdCliente);
+                if (clientePorId == null || !clientePorId.Activo)
+                {
+                    throw new InvalidOperationException("El cliente no existe o no se encuentra activo.");
+                }
+            }
+
+            Cliente? clientePorIdentificacion = null;
+            if (tieneIdentificacion)
+            {
+                clientePorIdentificacion = _clienteDatos.ObtenerClienteActivoPorIdentificacion(identificacionNormalizada);
+                if (clientePorIdentificacion == null)
+                {
+                    throw new InvalidOperationException("El cliente no existe o no se encuentra activo.");
+                }
+            }
+
+            if (clientePorId != null && clientePorIdentificacion != null && clientePorId.IdCliente != clientePorIdentificacion.IdCliente)
+            {
+                throw new InvalidOperationException("El id del cliente y la identificación suministrados no corresponden al mismo cliente.");
+            }
+
+            return clientePorId ?? clientePorIdentificacion
+                ?? throw new InvalidOperationException("La venta debe incluir un cliente válido y activo.");
         }
 
         private void ValidarVentaPersistida(Venta venta)
