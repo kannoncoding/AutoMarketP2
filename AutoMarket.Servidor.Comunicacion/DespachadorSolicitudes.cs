@@ -239,6 +239,11 @@ namespace AutoMarket.Servidor.Comunicacion
                 throw new InvalidOperationException("No existe un vehículo registrado con el id indicado.");
             }
 
+            if (vehiculo.Categoria == null)
+            {
+                throw new InvalidOperationException("El vehículo indicado no tiene una categoría asociada válida.");
+            }
+
             return string.Join("|",
                 "OK",
                 "VEHICULO",
@@ -300,7 +305,27 @@ namespace AutoMarket.Servidor.Comunicacion
 
         private string FormatearVehiculoxSucursal(VehiculoxSucursal vehiculoxSucursal)
         {
+            if (vehiculoxSucursal == null)
+            {
+                throw new ArgumentNullException(nameof(vehiculoxSucursal), "El inventario indicado no es válido.");
+            }
+
+            if (vehiculoxSucursal.Sucursal == null)
+            {
+                throw new InvalidOperationException("El inventario consultado contiene una sucursal no válida.");
+            }
+
+            if (vehiculoxSucursal.Vehiculo == null)
+            {
+                throw new InvalidOperationException("El inventario consultado contiene un vehículo no válido.");
+            }
+
             Vehiculo vehiculo = vehiculoxSucursal.Vehiculo;
+
+            if (vehiculo.Categoria == null)
+            {
+                throw new InvalidOperationException("El inventario consultado contiene un vehículo sin categoría válida.");
+            }
 
             return string.Join("^",
                 vehiculoxSucursal.Sucursal.IdSucursal.ToString(CultureInfo.InvariantCulture),
@@ -319,6 +344,21 @@ namespace AutoMarket.Servidor.Comunicacion
 
         private string FormatearVenta(Venta venta)
         {
+            if (venta == null)
+            {
+                throw new ArgumentNullException(nameof(venta), "La venta indicada no es válida.");
+            }
+
+            if (venta.Cliente == null || venta.Sucursal == null || venta.Vehiculo == null)
+            {
+                throw new InvalidOperationException("La venta consultada contiene datos incompletos.");
+            }
+
+            if (venta.Vehiculo.Categoria == null)
+            {
+                throw new InvalidOperationException("La venta consultada contiene un vehículo sin categoría válida.");
+            }
+
             return string.Join("^",
                 venta.IdVenta.ToString(CultureInfo.InvariantCulture),
                 venta.Cliente.IdCliente.ToString(CultureInfo.InvariantCulture),
