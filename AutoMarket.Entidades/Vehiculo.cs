@@ -16,7 +16,7 @@ namespace AutoMarket.Entidades
         private int _idVehiculo;
         private string _marca = string.Empty;
         private string _modelo = string.Empty;
-        private int _anio;
+        private int _ano;
         private decimal _precio;
         private CategoriaVehiculo _categoria = null!;
         private char _estado;
@@ -67,9 +67,9 @@ namespace AutoMarket.Entidades
             }
         }
 
-        public int Anio
+        public int Ano
         {
-            get => _anio;
+            get => _ano;
             set
             {
                 if (value < 1900)
@@ -82,7 +82,7 @@ namespace AutoMarket.Entidades
                     throw new ArgumentException("El año del vehículo no es válido.");
                 }
 
-                _anio = value;
+                _ano = value;
             }
         }
 
@@ -134,7 +134,7 @@ namespace AutoMarket.Entidades
             int idVehiculo,
             string marca,
             string modelo,
-            int anio,
+            int ano,
             decimal precio,
             CategoriaVehiculo categoria,
             char estado)
@@ -142,7 +142,7 @@ namespace AutoMarket.Entidades
             IdVehiculo = idVehiculo;
             Marca = marca;
             Modelo = modelo;
-            Anio = anio;
+            Ano = ano;
             Precio = precio;
             Categoria = categoria;
             Estado = estado;

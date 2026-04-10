@@ -106,12 +106,12 @@ namespace AutoMarket.Servidor.Logica
                 throw new ArgumentException("El modelo del vehículo es obligatorio.");
             }
 
-            if (vehiculo.Anio < 1900)
+            if (vehiculo.Ano < 1900)
             {
                 throw new ArgumentException("El año del vehículo no puede ser menor a 1900.");
             }
 
-            if (vehiculo.Anio > DateTime.Today.Year + 1)
+            if (vehiculo.Ano > DateTime.Today.Year + 1)
             {
                 throw new ArgumentException("El año del vehículo no es válido.");
             }

@@ -125,7 +125,7 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
 SELECT vs.Cantidad,
        s.IdSucursal, s.Nombre, s.Direccion, s.Telefono, s.Activo,
        vd.IdVendedor, vd.Identificacion, vd.NombreCompleto, vd.FechaNacimiento, vd.FechaIngreso, vd.Telefono AS TelefonoVendedor,
-       v.IdVehiculo, v.Marca, v.Modelo, v.Anio, v.Precio, v.Estado,
+       v.IdVehiculo, v.Marca, v.Modelo, v.Ano, v.Precio, v.Estado,
        c.IdCategoria, c.NombreCategoria, c.Descripcion
 FROM VehiculoxSucursal vs
 INNER JOIN Sucursal s ON vs.IdSucursal = s.IdSucursal
@@ -155,7 +155,7 @@ WHERE vs.IdSucursal=@IdSucursal AND vs.IdVehiculo=@IdVehiculo;";
                     Convert.ToInt32(dr["IdVehiculo"]),
                     dr["Marca"].ToString() ?? "",
                     dr["Modelo"].ToString() ?? "",
-                    Convert.ToInt32(dr["Anio"]),
+                    Convert.ToInt32(dr["Ano"]),
                     Convert.ToDecimal(dr["Precio"]),
                     categoria,
                     Convert.ToChar(dr["Estado"])
@@ -200,7 +200,7 @@ WHERE vs.IdSucursal=@IdSucursal AND vs.IdVehiculo=@IdVehiculo;";
 SELECT vs.Cantidad,
        s.IdSucursal, s.Nombre, s.Direccion, s.Telefono, s.Activo,
        vd.IdVendedor, vd.Identificacion, vd.NombreCompleto, vd.FechaNacimiento, vd.FechaIngreso, vd.Telefono AS TelefonoVendedor,
-       v.IdVehiculo, v.Marca, v.Modelo, v.Anio, v.Precio, v.Estado,
+       v.IdVehiculo, v.Marca, v.Modelo, v.Ano, v.Precio, v.Estado,
        c.IdCategoria, c.NombreCategoria, c.Descripcion
 FROM VehiculoxSucursal vs
 INNER JOIN Sucursal s ON vs.IdSucursal = s.IdSucursal
@@ -229,7 +229,7 @@ WHERE vs.IdSucursal=@IdSucursal;";
                     Convert.ToInt32(dr["IdVehiculo"]),
                     dr["Marca"].ToString() ?? "",
                     dr["Modelo"].ToString() ?? "",
-                    Convert.ToInt32(dr["Anio"]),
+                    Convert.ToInt32(dr["Ano"]),
                     Convert.ToDecimal(dr["Precio"]),
                     categoria,
                     Convert.ToChar(dr["Estado"])

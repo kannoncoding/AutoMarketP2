@@ -41,9 +41,9 @@ namespace AutoMarket.Servidor.Datos
 
             const string sql = @"
 INSERT INTO Vehiculo
-(IdVehiculo, Marca, Modelo, Anio, Precio, IdCategoria, Estado)
+(IdVehiculo, Marca, Modelo, Ano, Precio, IdCategoria, Estado)
 VALUES
-(@IdVehiculo, @Marca, @Modelo, @Anio, @Precio, @IdCategoria, @Estado);";
+(@IdVehiculo, @Marca, @Modelo, @Ano, @Precio, @IdCategoria, @Estado);";
 
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
@@ -51,7 +51,7 @@ VALUES
             cmd.Parameters.AddWithValue("@IdVehiculo", vehiculo.IdVehiculo);
             cmd.Parameters.AddWithValue("@Marca", vehiculo.Marca);
             cmd.Parameters.AddWithValue("@Modelo", vehiculo.Modelo);
-            cmd.Parameters.AddWithValue("@Anio", vehiculo.Anio);
+            cmd.Parameters.AddWithValue("@Ano", vehiculo.Ano);
             cmd.Parameters.AddWithValue("@Precio", vehiculo.Precio);
             cmd.Parameters.AddWithValue("@IdCategoria", vehiculo.Categoria.IdCategoria);
             cmd.Parameters.AddWithValue("@Estado", vehiculo.Estado);
@@ -76,7 +76,7 @@ VALUES
 UPDATE Vehiculo
 SET Marca=@Marca,
     Modelo=@Modelo,
-    Anio=@Anio,
+    Ano=@Ano,
     Precio=@Precio,
     IdCategoria=@IdCategoria,
     Estado=@Estado
@@ -88,7 +88,7 @@ WHERE IdVehiculo=@IdVehiculo;";
             cmd.Parameters.AddWithValue("@IdVehiculo", vehiculo.IdVehiculo);
             cmd.Parameters.AddWithValue("@Marca", vehiculo.Marca);
             cmd.Parameters.AddWithValue("@Modelo", vehiculo.Modelo);
-            cmd.Parameters.AddWithValue("@Anio", vehiculo.Anio);
+            cmd.Parameters.AddWithValue("@Ano", vehiculo.Ano);
             cmd.Parameters.AddWithValue("@Precio", vehiculo.Precio);
             cmd.Parameters.AddWithValue("@IdCategoria", vehiculo.Categoria.IdCategoria);
             cmd.Parameters.AddWithValue("@Estado", vehiculo.Estado);
@@ -146,7 +146,7 @@ WHERE v.IdVehiculo=@IdVehiculo;";
                     Convert.ToInt32(dr["IdVehiculo"]),
                     dr["Marca"].ToString() ?? "",
                     dr["Modelo"].ToString() ?? "",
-                    Convert.ToInt32(dr["Anio"]),
+                    Convert.ToInt32(dr["Ano"]),
                     Convert.ToDecimal(dr["Precio"]),
                     categoria,
                     Convert.ToChar(dr["Estado"])
@@ -184,7 +184,7 @@ ORDER BY v.IdVehiculo;";
                     Convert.ToInt32(dr["IdVehiculo"]),
                     dr["Marca"].ToString() ?? "",
                     dr["Modelo"].ToString() ?? "",
-                    Convert.ToInt32(dr["Anio"]),
+                    Convert.ToInt32(dr["Ano"]),
                     Convert.ToDecimal(dr["Precio"]),
                     categoria,
                     Convert.ToChar(dr["Estado"])

@@ -245,7 +245,7 @@ SELECT
     vh.IdVehiculo,
     vh.Marca,
     vh.Modelo,
-    vh.Anio,
+    vh.Ano,
     vh.Precio,
     vh.Estado,
 
@@ -319,7 +319,7 @@ SELECT
     vh.IdVehiculo,
     vh.Marca,
     vh.Modelo,
-    vh.Anio,
+    vh.Ano,
     vh.Precio,
     vh.Estado,
 
@@ -396,7 +396,7 @@ SELECT
     vh.IdVehiculo,
     vh.Marca,
     vh.Modelo,
-    vh.Anio,
+    vh.Ano,
     vh.Precio,
     vh.Estado,
 
@@ -476,7 +476,7 @@ SELECT
     vh.IdVehiculo,
     vh.Marca,
     vh.Modelo,
-    vh.Anio,
+    vh.Ano,
     vh.Precio,
     vh.Estado,
 
@@ -763,7 +763,7 @@ SELECT
     vh.IdVehiculo,
     vh.Marca,
     vh.Modelo,
-    vh.Anio,
+    vh.Ano,
     vh.Precio,
     vh.Estado,
 
@@ -792,7 +792,7 @@ WHERE vh.IdVehiculo = @IdVehiculo;";
                             Convert.ToInt32(lector["IdVehiculo"]),
                             Convert.ToString(lector["Marca"]) ?? string.Empty,
                             Convert.ToString(lector["Modelo"]) ?? string.Empty,
-                            Convert.ToInt32(lector["Anio"]),
+                            Convert.ToInt32(lector["Ano"]),
                             Convert.ToDecimal(lector["Precio"]),
                             categoriaVehiculo,
                             Convert.ToChar(lector["Estado"])
@@ -846,7 +846,7 @@ WHERE vh.IdVehiculo = @IdVehiculo;";
                 Convert.ToInt32(lector["IdVehiculo"]),
                 Convert.ToString(lector["Marca"]) ?? string.Empty,
                 Convert.ToString(lector["Modelo"]) ?? string.Empty,
-                Convert.ToInt32(lector["Anio"]),
+                Convert.ToInt32(lector["Ano"]),
                 Convert.ToDecimal(lector["Precio"]),
                 categoriaVehiculo,
                 Convert.ToChar(lector["Estado"])
