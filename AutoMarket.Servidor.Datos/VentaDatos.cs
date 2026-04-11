@@ -471,11 +471,15 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
             using (SqlCommand comando = new SqlCommand(consultaSql, conexion, transaccion))
             {
-                comando.Parameters.AddWithValue("@IdCliente", idCliente);
-                comando.Parameters.AddWithValue("@IdSucursal", idSucursal);
-                comando.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
-                comando.Parameters.AddWithValue("@FechaVenta", fechaVenta);
-                comando.Parameters.AddWithValue("@Monto", monto);
+                comando.Parameters.Add("@IdCliente", SqlDbType.Int).Value = idCliente;
+                comando.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
+                comando.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = idVehiculo;
+                comando.Parameters.Add("@FechaVenta", SqlDbType.DateTime).Value = fechaVenta;
+
+                SqlParameter parametroMonto = comando.Parameters.Add("@Monto", SqlDbType.Decimal);
+                parametroMonto.Precision = 10;
+                parametroMonto.Scale = 2;
+                parametroMonto.Value = monto;
 
                 object? resultado = comando.ExecuteScalar();
 
