@@ -94,60 +94,6 @@ namespace AutoMarket.Servidor.Logica
             return idVentaGenerado;
         }
 
-        public void Actualizar(Venta venta)
-        {
-            if (venta == null)
-            {
-                throw new ArgumentNullException(nameof(venta), "La venta es obligatoria.");
-            }
-
-            if (venta.IdVenta <= 0)
-            {
-                throw new ArgumentException("El id de la venta debe ser mayor que cero.");
-            }
-
-            ValidarVentaPersistida(venta);
-
-            Cliente? cliente = _clienteDatos.ObtenerPorId(venta.Cliente.IdCliente);
-            if (cliente == null)
-            {
-                throw new InvalidOperationException("El cliente asociado a la venta no existe.");
-            }
-
-            Sucursal? sucursal = _sucursalDatos.ObtenerPorId(venta.Sucursal.IdSucursal);
-            if (sucursal == null)
-            {
-                throw new InvalidOperationException("La sucursal asociada a la venta no existe.");
-            }
-
-            Vehiculo? vehiculo = _vehiculoDatos.ObtenerPorId(venta.Vehiculo.IdVehiculo);
-            if (vehiculo == null)
-            {
-                throw new InvalidOperationException("El vehículo asociado a la venta no existe.");
-            }
-
-            Venta ventaActualizada = new Venta(
-                venta.IdVenta,
-                cliente,
-                sucursal,
-                vehiculo,
-                venta.FechaVenta,
-                venta.Monto
-            );
-
-            _ventaDatos.Actualizar(ventaActualizada);
-        }
-
-        public void Eliminar(int idVenta)
-        {
-            if (idVenta <= 0)
-            {
-                throw new ArgumentException("El id de la venta debe ser mayor que cero.");
-            }
-
-            _ventaDatos.Eliminar(idVenta);
-        }
-
         public Venta? ObtenerPorId(int idVenta)
         {
             if (idVenta <= 0)
