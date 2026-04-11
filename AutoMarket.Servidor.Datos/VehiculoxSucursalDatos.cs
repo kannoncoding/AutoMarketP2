@@ -9,6 +9,7 @@ Fecha de desarrollo: 2026-04-04
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using AutoMarket.Entidades;
 using Microsoft.Data.SqlClient;
 
@@ -60,9 +61,9 @@ VALUES
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@IdSucursal", relacion.Sucursal.IdSucursal);
-            cmd.Parameters.AddWithValue("@IdVehiculo", relacion.Vehiculo.IdVehiculo);
-            cmd.Parameters.AddWithValue("@Cantidad", relacion.Cantidad);
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = relacion.Sucursal.IdSucursal;
+            cmd.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = relacion.Vehiculo.IdVehiculo;
+            cmd.Parameters.Add("@Cantidad", SqlDbType.Int).Value = relacion.Cantidad;
 
             cn.Open();
             if (cmd.ExecuteNonQuery() == 0)
@@ -78,7 +79,7 @@ VALUES
                 throw new ArgumentException("El id del vehículo debe ser mayor que cero.", nameof(idVehiculo));
 
             if (nuevaCantidad < 0)
-                throw new ArgumentException("Cantidad inválida.");
+                throw new ArgumentException("Cantidad inválida.", nameof(nuevaCantidad));
 
             if (!ExisteRelacion(idSucursal, idVehiculo))
                 throw new InvalidOperationException("La relación no existe.");
@@ -91,9 +92,9 @@ WHERE IdSucursal = @IdSucursal AND IdVehiculo = @IdVehiculo;";
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@Cantidad", nuevaCantidad);
-            cmd.Parameters.AddWithValue("@IdSucursal", idSucursal);
-            cmd.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
+            cmd.Parameters.Add("@Cantidad", SqlDbType.Int).Value = nuevaCantidad;
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
+            cmd.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = idVehiculo;
 
             cn.Open();
             if (cmd.ExecuteNonQuery() == 0)
@@ -115,8 +116,8 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@IdSucursal", idSucursal);
-            cmd.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
+            cmd.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = idVehiculo;
 
             cn.Open();
 
@@ -148,8 +149,8 @@ WHERE vs.IdSucursal=@IdSucursal AND vs.IdVehiculo=@IdVehiculo;";
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@IdSucursal", idSucursal);
-            cmd.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
+            cmd.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = idVehiculo;
 
             cn.Open();
             using SqlDataReader dr = cmd.ExecuteReader();
@@ -223,7 +224,7 @@ WHERE vs.IdSucursal=@IdSucursal;";
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@IdSucursal", idSucursal);
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
 
             cn.Open();
             using SqlDataReader dr = cmd.ExecuteReader();
@@ -247,13 +248,13 @@ WHERE vs.IdSucursal=@IdSucursal;";
                 );
 
                 var vendedor = new Vendedor(
-                   Convert.ToInt32(dr["IdVendedor"]),
-                   dr["Identificacion"].ToString() ?? "",
-                   dr["NombreCompleto"].ToString() ?? "",
-                   Convert.ToDateTime(dr["FechaNacimiento"]),
-                   Convert.ToDateTime(dr["FechaIngreso"]),
-                   dr["TelefonoVendedor"].ToString() ?? ""
-               );
+                    Convert.ToInt32(dr["IdVendedor"]),
+                    dr["Identificacion"].ToString() ?? "",
+                    dr["NombreCompleto"].ToString() ?? "",
+                    Convert.ToDateTime(dr["FechaNacimiento"]),
+                    Convert.ToDateTime(dr["FechaIngreso"]),
+                    dr["TelefonoVendedor"].ToString() ?? ""
+                );
 
                 var sucursal = new Sucursal(
                     Convert.ToInt32(dr["IdSucursal"]),
@@ -287,8 +288,8 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@IdSucursal", idSucursal);
-            cmd.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
+            cmd.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = idVehiculo;
 
             cn.Open();
             return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
@@ -307,11 +308,11 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@IdSucursal", idSucursal);
-            cmd.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
+            cmd.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = idVehiculo;
 
             cn.Open();
-            object resultado = cmd.ExecuteScalar();
+            object? resultado = cmd.ExecuteScalar();
 
             if (resultado == null || resultado == DBNull.Value)
                 return false;
@@ -335,8 +336,8 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo AND Cantidad > 0;";
             using SqlConnection cn = _conexionSqlServer.CrearConexion();
             using SqlCommand cmd = new SqlCommand(sql, cn);
 
-            cmd.Parameters.AddWithValue("@IdSucursal", idSucursal);
-            cmd.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
+            cmd.Parameters.Add("@IdSucursal", SqlDbType.Int).Value = idSucursal;
+            cmd.Parameters.Add("@IdVehiculo", SqlDbType.Int).Value = idVehiculo;
 
             cn.Open();
 
