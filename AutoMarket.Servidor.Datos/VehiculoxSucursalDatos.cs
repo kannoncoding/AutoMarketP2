@@ -33,11 +33,20 @@ namespace AutoMarket.Servidor.Datos
             if (relacion == null)
                 throw new ArgumentNullException(nameof(relacion));
 
+            if (relacion.Sucursal == null)
+                throw new ArgumentException("La sucursal asociada es obligatoria.", nameof(relacion));
+
+            if (relacion.Vehiculo == null)
+                throw new ArgumentException("El vehículo asociado es obligatorio.", nameof(relacion));
+
             if (relacion.Sucursal.IdSucursal <= 0)
                 throw new ArgumentException("La sucursal asociada es inválida.", nameof(relacion));
 
             if (relacion.Vehiculo.IdVehiculo <= 0)
                 throw new ArgumentException("El vehículo asociado es inválido.", nameof(relacion));
+
+            if (relacion.Cantidad < 0)
+                throw new ArgumentException("La cantidad no puede ser negativa.", nameof(relacion));
 
             if (ExisteRelacion(relacion.Sucursal.IdSucursal, relacion.Vehiculo.IdVehiculo))
                 throw new InvalidOperationException("La relación ya existe.");
