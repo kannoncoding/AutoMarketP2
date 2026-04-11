@@ -119,7 +119,9 @@ WHERE IdSucursal=@IdSucursal AND IdVehiculo=@IdVehiculo;";
             cmd.Parameters.AddWithValue("@IdVehiculo", idVehiculo);
 
             cn.Open();
-            cmd.ExecuteNonQuery();
+
+            if (cmd.ExecuteNonQuery() == 0)
+                throw new InvalidOperationException("No existe la relación a eliminar.");
         }
 
         public VehiculoxSucursal? ObtenerRelacion(int idSucursal, int idVehiculo)
