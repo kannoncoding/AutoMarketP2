@@ -70,6 +70,12 @@ namespace AutoMarket.Entidades
             Descripcion = descripcion;
         }
 
+        public CategoriaVehiculo(string nombreCategoria, string descripcion)
+        {
+            NombreCategoria = nombreCategoria;
+            Descripcion = descripcion;
+        }
+
         public override string ToString()
         {
             return IdCategoria + " - " + NombreCategoria;

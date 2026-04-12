@@ -188,88 +188,114 @@ namespace AutoMarket.Servidor.Presentacion
 
         private void btnRegistroCategoriaVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Registro de Categoría de Vehículo");
+            AbrirFormularioModulo("FrmRegistroCategoriaVehiculo", "Registro de Categoría de Vehículo");
         }
 
         private void btnRegistroVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Registro de Vehículo");
+            AbrirFormularioModulo("FrmRegistroVehiculo", "Registro de Vehículo");
         }
 
         private void btnRegistroVendedor_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Registro de Vendedor");
+            AbrirFormularioModulo("FrmRegistroVendedor", "Registro de Vendedor");
         }
 
         private void btnRegistroSucursal_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Registro de Sucursal");
+            AbrirFormularioModulo("FrmRegistroSucursal", "Registro de Sucursal");
         }
 
         private void btnRegistroCliente_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Registro de Cliente");
+            AbrirFormularioModulo("FrmRegistroCliente", "Registro de Cliente");
         }
 
         private void btnRegistroVehiculoXSucursal_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Registro de Vehículo por Sucursal");
+            AbrirFormularioModulo("FrmRegistroVehiculoXSucursal", "Registro de Vehículo por Sucursal");
         }
 
         private void btnConsultaSucursal_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Consulta de Sucursal");
+            AbrirFormularioModulo("FrmConsultaSucursal", "Consulta de Sucursal");
         }
 
         private void btnConsultaVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Consulta de Vehículo");
+            AbrirFormularioModulo("FrmConsultaVehiculo", "Consulta de Vehículo");
         }
 
         private void btnConsultaVehiculoXSucursal_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Consulta de Vehículo por Sucursal");
+            AbrirFormularioModulo("FrmConsultaVehiculoXSucursal", "Consulta de Vehículo por Sucursal");
         }
 
         private void btnConsultaCategoriaVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Consulta de Categoría de Vehículo");
+            AbrirFormularioModulo("FrmConsultaCategoriaVehiculo", "Consulta de Categoría de Vehículo");
         }
 
         private void btnConsultaVendedor_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Consulta de Vendedor");
+            AbrirFormularioModulo("FrmConsultaVendedor", "Consulta de Vendedor");
         }
 
         private void btnConsultaCliente_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Consulta de Cliente");
+            AbrirFormularioModulo("FrmConsultaCliente", "Consulta de Cliente");
         }
 
         private void btnConsultaVenta_Click(object sender, EventArgs e)
         {
-            AbrirFormularioModulo("Consulta de Venta");
+            AbrirFormularioModulo("FrmConsultaVenta", "Consulta de Venta");
         }
 
-        private void AbrirFormularioModulo(string nombreModulo)
+        private void AbrirFormularioModulo(string nombreClaseFormulario, string nombreModulo)
         {
             try
             {
-                MessageBox.Show(
-                    $"Más adelante aquí se abrirá el módulo:\n\n{nombreModulo}",
-                    "Módulo en preparación",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                string nombreCompletoTipo = $"AutoMarket.Servidor.Presentacion.{nombreClaseFormulario}";
+                Type? tipoFormulario = typeof(FrmServidorPrincipal).Assembly.GetType(nombreCompletoTipo);
 
-                AgregarEventoBitacora($"El administrador abrió el acceso al módulo: {nombreModulo}.");
+                if (tipoFormulario == null)
+                {
+                    MessageBox.Show(
+                        $"El formulario correspondiente al módulo \"{nombreModulo}\" todavía no existe en la solución.",
+                        "Formulario no disponible",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
+                    AgregarEventoBitacora($"Intento de apertura del módulo no disponible: {nombreModulo}.");
+                    return;
+                }
+
+                if (!typeof(Form).IsAssignableFrom(tipoFormulario))
+                {
+                    MessageBox.Show(
+                        $"El tipo \"{nombreClaseFormulario}\" existe, pero no corresponde a un formulario válido.",
+                        "Tipo inválido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+
+                    AgregarEventoBitacora($"El tipo encontrado para el módulo {nombreModulo} no hereda de Form.");
+                    return;
+                }
+
+                Form formulario = (Form)Activator.CreateInstance(tipoFormulario)!;
+                formulario.ShowDialog(this);
+
+                AgregarEventoBitacora($"El administrador abrió el módulo: {nombreModulo}.");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Ocurrió un error al intentar abrir el módulo.\n\nDetalle: {ex.Message}",
+                    $"Ocurrió un error al intentar abrir el módulo \"{nombreModulo}\".\n\nDetalle: {ex.Message}",
                     "Error al abrir módulo",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+
+                AgregarEventoBitacora($"Error al abrir el módulo {nombreModulo}: {ex.Message}");
             }
         }
 
