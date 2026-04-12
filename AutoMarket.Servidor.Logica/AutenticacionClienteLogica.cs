@@ -1,10 +1,10 @@
 ﻿/*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #2
+Proyecto: AutoMarket - Proyecto #1
 Descripción: Clase de lógica de negocio para validar la autenticación y habilitación de clientes activos en el sistema AutoMarket.
-Estudiante: Jorge Arias M
-Fecha de desarrollo: 2026-04-05
+Estudiante: Jorge Arias
+Fecha de desarrollo: 2026-02-09
 */
 
 using System;
@@ -19,7 +19,8 @@ namespace AutoMarket.Servidor.Logica
 
         public AutenticacionClienteLogica()
         {
-            _clienteDatos = new ClienteDatos();
+            ConexionSqlServer conexionSqlServer = new ConexionSqlServer();
+            _clienteDatos = new ClienteDatos(conexionSqlServer);
         }
 
         public AutenticacionClienteLogica(ClienteDatos clienteDatos)
