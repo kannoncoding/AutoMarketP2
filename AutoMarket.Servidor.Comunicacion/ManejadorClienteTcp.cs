@@ -1,10 +1,10 @@
 ﻿/*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #2
+Proyecto: AutoMarket - Proyecto #1
 Descripción: Clase encargada de administrar la comunicación TCP de un cliente conectado, procesando solicitudes, devolviendo respuestas y notificando eventos del sistema.
-Estudiante: Jorge Arias M
-Fecha de desarrollo: 2026-04-06
+Estudiante: Jorge Arias
+Fecha de desarrollo: 2026-02-06
 */
 
 using System;
@@ -76,7 +76,7 @@ namespace AutoMarket.Servidor.Comunicacion
                     AutoFlush = true
                 };
 
-                EnviarRespuesta(escritor, "OK|CONEXION_ESTABLECIDA");
+                EnviarRespuesta(escritor, "OK|CONEXION|ESTABLECIDA");
 
                 while (ClienteConectado)
                 {
@@ -92,7 +92,7 @@ namespace AutoMarket.Servidor.Comunicacion
 
                     if (string.IsNullOrWhiteSpace(solicitudNormalizada))
                     {
-                        EnviarRespuesta(escritor, "ERROR|SOLICITUD_VACIA");
+                        EnviarRespuesta(escritor, "ERROR|GENERAL|La solicitud recibida está vacía.");
                         continue;
                     }
 
@@ -100,7 +100,7 @@ namespace AutoMarket.Servidor.Comunicacion
 
                     if (EsSolicitudDeDesconexion(solicitudNormalizada))
                     {
-                        EnviarRespuesta(escritor, "OK|DESCONEXION_ACEPTADA");
+                        EnviarRespuesta(escritor, "OK|DESCONEXION|ACEPTADA");
                         NotificarEvento("El cliente " + direccionRemota + " solicitó finalizar la conexión.");
                         break;
                     }
@@ -169,28 +169,30 @@ namespace AutoMarket.Servidor.Comunicacion
 
         private string ProcesarSolicitudSegura(string solicitud)
         {
+            string operacion = ObtenerOperacionDesdeSolicitud(solicitud);
+
             try
             {
                 string respuesta = _despachadorSolicitudes.ProcesarSolicitud(solicitud);
 
                 if (string.IsNullOrWhiteSpace(respuesta))
                 {
-                    return "ERROR|RESPUESTA_NO_GENERADA";
+                    return "ERROR|" + operacion + "|No se generó una respuesta válida.";
                 }
 
                 return respuesta;
             }
             catch (ArgumentException ex)
             {
-                return "ERROR|SOLICITUD_INVALIDA|" + LimpiarTextoParaTransmision(ex.Message);
+                return "ERROR|" + operacion + "|" + LimpiarTextoParaTransmision(ex.Message);
             }
             catch (InvalidOperationException ex)
             {
-                return "ERROR|OPERACION_INVALIDA|" + LimpiarTextoParaTransmision(ex.Message);
+                return "ERROR|" + operacion + "|" + LimpiarTextoParaTransmision(ex.Message);
             }
             catch (Exception ex)
             {
-                return "ERROR|ERROR_INTERNO|" + LimpiarTextoParaTransmision(ex.Message);
+                return "ERROR|" + operacion + "|" + LimpiarTextoParaTransmision(ex.Message);
             }
         }
 
@@ -205,7 +207,7 @@ namespace AutoMarket.Servidor.Comunicacion
 
             if (string.IsNullOrWhiteSpace(respuestaNormalizada))
             {
-                respuestaNormalizada = "ERROR|RESPUESTA_VACIA";
+                respuestaNormalizada = "ERROR|GENERAL|La respuesta generada está vacía.";
             }
 
             lock (_bloqueoEnvio)
@@ -222,7 +224,28 @@ namespace AutoMarket.Servidor.Comunicacion
             return textoNormalizado == "SALIR"
                 || textoNormalizado == "DESCONECTAR"
                 || textoNormalizado == "QUIT"
-                || textoNormalizado == "EXIT";
+                || textoNormalizado == "EXIT"
+                || textoNormalizado == "LOGOUT";
+        }
+
+        private string ObtenerOperacionDesdeSolicitud(string solicitud)
+        {
+            string textoNormalizado = solicitud?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(textoNormalizado))
+            {
+                return "GENERAL";
+            }
+
+            string[] partes = textoNormalizado.Split('|');
+            string operacion = (partes[0] ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (string.IsNullOrWhiteSpace(operacion))
+            {
+                return "GENERAL";
+            }
+
+            return operacion;
         }
 
         private string ObtenerDireccionRemota()
@@ -248,6 +271,8 @@ namespace AutoMarket.Servidor.Comunicacion
             textoNormalizado = textoNormalizado.Replace("\r", " ");
             textoNormalizado = textoNormalizado.Replace("\n", " ");
             textoNormalizado = textoNormalizado.Replace("|", "/");
+            textoNormalizado = textoNormalizado.Replace(";", "/");
+            textoNormalizado = textoNormalizado.Replace(",", "/");
 
             return textoNormalizado;
         }
