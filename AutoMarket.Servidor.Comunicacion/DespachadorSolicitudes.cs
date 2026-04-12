@@ -1,16 +1,16 @@
 ﻿/*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #2
-Descripción: Clase encargada de interpretar y despachar las solicitudes recibidas por TCP hacia la lógica de negocio correspondiente.
-Estudiante: Jorge Arias M
-Fecha de desarrollo: 2026-04-06
+Proyecto: AutoMarket - Proyecto #1
+Descripción: Clase encargada de interpretar solicitudes TCP del cliente y generar respuestas protocolarias del servidor.
+Estudiante: Jorge Arias
+Fecha de desarrollo: 2026-02-06
 */
 
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
+using System.Linq;
 using AutoMarket.Entidades;
 using AutoMarket.Servidor.Logica;
 
@@ -18,7 +18,6 @@ namespace AutoMarket.Servidor.Comunicacion
 {
     public sealed class DespachadorSolicitudes
     {
-        private readonly AutenticacionClienteLogica _autenticacionClienteLogica;
         private readonly SucursalLogica _sucursalLogica;
         private readonly VehiculoxSucursalLogica _vehiculoxSucursalLogica;
         private readonly VentaLogica _ventaLogica;
@@ -27,7 +26,6 @@ namespace AutoMarket.Servidor.Comunicacion
 
         public DespachadorSolicitudes()
         {
-            _autenticacionClienteLogica = new AutenticacionClienteLogica();
             _sucursalLogica = new SucursalLogica();
             _vehiculoxSucursalLogica = new VehiculoxSucursalLogica();
             _ventaLogica = new VentaLogica();
@@ -36,14 +34,12 @@ namespace AutoMarket.Servidor.Comunicacion
         }
 
         public DespachadorSolicitudes(
-            AutenticacionClienteLogica autenticacionClienteLogica,
             SucursalLogica sucursalLogica,
             VehiculoxSucursalLogica vehiculoxSucursalLogica,
             VentaLogica ventaLogica,
             ClienteLogica clienteLogica,
             VehiculoLogica vehiculoLogica)
         {
-            _autenticacionClienteLogica = autenticacionClienteLogica ?? throw new ArgumentNullException(nameof(autenticacionClienteLogica));
             _sucursalLogica = sucursalLogica ?? throw new ArgumentNullException(nameof(sucursalLogica));
             _vehiculoxSucursalLogica = vehiculoxSucursalLogica ?? throw new ArgumentNullException(nameof(vehiculoxSucursalLogica));
             _ventaLogica = ventaLogica ?? throw new ArgumentNullException(nameof(ventaLogica));
@@ -66,55 +62,67 @@ namespace AutoMarket.Servidor.Comunicacion
             return comando switch
             {
                 "PING" => ProcesarPing(),
-                "AUTENTICAR_CLIENTE" => ProcesarAutenticacionCliente(partes),
-                "VALIDAR_CLIENTE" => ProcesarAutenticacionCliente(partes),
+                "LOGIN" => ProcesarLogin(partes),
+
+                "SUCURSALES_ACTIVAS" => ProcesarObtenerSucursalesActivas(),
+                "VEHICULOS_POR_SUCURSAL" => ProcesarObtenerVehiculosPorSucursal(partes),
+                "VENTA" => ProcesarRegistrarVenta(partes),
+                "VENTAS_POR_CLIENTE" => ProcesarObtenerVentasPorCliente(partes),
+
+                "CLIENTE_POR_ID" => ProcesarObtenerClientePorId(partes),
+                "VEHICULO_POR_ID" => ProcesarObtenerVehiculoPorId(partes),
+
+                "AUTENTICAR_CLIENTE" => ProcesarLoginAlias(partes),
+                "VALIDAR_CLIENTE" => ProcesarLoginAlias(partes),
                 "OBTENER_SUCURSALES_ACTIVAS" => ProcesarObtenerSucursalesActivas(),
                 "OBTENER_VEHICULOS_POR_SUCURSAL" => ProcesarObtenerVehiculosPorSucursal(partes),
                 "REGISTRAR_VENTA" => ProcesarRegistrarVenta(partes),
                 "OBTENER_VENTAS_POR_CLIENTE" => ProcesarObtenerVentasPorCliente(partes),
                 "OBTENER_CLIENTE_POR_ID" => ProcesarObtenerClientePorId(partes),
                 "OBTENER_VEHICULO_POR_ID" => ProcesarObtenerVehiculoPorId(partes),
+
                 _ => throw new ArgumentException("El comando solicitado no es reconocido por el servidor.")
             };
         }
 
         private string ProcesarPing()
         {
-            return "OK|PONG";
+            return "OK|PING|PONG";
         }
 
-        private string ProcesarAutenticacionCliente(string[] partes)
+        private string ProcesarLogin(string[] partes)
         {
-            ValidarCantidadMinimaPartes(partes, 2, "La solicitud de autenticación requiere la identificación del cliente.");
+            ValidarCantidadMinimaPartes(partes, 2, "La solicitud LOGIN requiere el id del cliente.");
 
-            string identificacion = ObtenerTextoRequerido(partes[1], "La identificación del cliente es obligatoria.");
+            int idCliente = ObtenerEnteroRequerido(partes[1], "El id del cliente no es válido.");
 
-            Cliente cliente = _autenticacionClienteLogica.AutenticarPorIdentificacion(identificacion);
+            Cliente? cliente = _clienteLogica.ObtenerPorId(idCliente);
+            if (cliente == null || !cliente.Activo)
+            {
+                throw new InvalidOperationException("El cliente no existe o no se encuentra activo.");
+            }
 
             return string.Join("|",
                 "OK",
-                "CLIENTE_AUTENTICADO",
+                "LOGIN",
                 cliente.IdCliente.ToString(CultureInfo.InvariantCulture),
-                EscaparCampo(cliente.Identificacion),
-                EscaparCampo(cliente.NombreCompleto),
-                cliente.Activo ? "1" : "0");
+                EscaparCampo(cliente.NombreCompleto));
+        }
+
+        private string ProcesarLoginAlias(string[] partes)
+        {
+            return ProcesarLogin(partes);
         }
 
         private string ProcesarObtenerSucursalesActivas()
         {
             List<Sucursal> sucursales = _sucursalLogica.ObtenerActivas();
+            string datos = UnirRegistros(sucursales.Select(FormatearSucursal));
 
-            StringBuilder respuesta = new StringBuilder();
-            respuesta.Append("OK|SUCURSALES_ACTIVAS|");
-            respuesta.Append(sucursales.Count.ToString(CultureInfo.InvariantCulture));
-
-            foreach (Sucursal sucursal in sucursales)
-            {
-                respuesta.Append("|");
-                respuesta.Append(FormatearSucursal(sucursal));
-            }
-
-            return respuesta.ToString();
+            return string.Join("|",
+                "OK",
+                "SUCURSALES_ACTIVAS",
+                datos);
         }
 
         private string ProcesarObtenerVehiculosPorSucursal(string[] partes)
@@ -124,23 +132,17 @@ namespace AutoMarket.Servidor.Comunicacion
             int idSucursal = ObtenerEnteroRequerido(partes[1], "El id de la sucursal no es válido.");
 
             List<VehiculoxSucursal> inventario = _vehiculoxSucursalLogica.ObtenerPorSucursal(idSucursal);
+            string datos = UnirRegistros(inventario.Select(FormatearVehiculoxSucursal));
 
-            StringBuilder respuesta = new StringBuilder();
-            respuesta.Append("OK|VEHICULOS_POR_SUCURSAL|");
-            respuesta.Append(inventario.Count.ToString(CultureInfo.InvariantCulture));
-
-            foreach (VehiculoxSucursal item in inventario)
-            {
-                respuesta.Append("|");
-                respuesta.Append(FormatearVehiculoxSucursal(item));
-            }
-
-            return respuesta.ToString();
+            return string.Join("|",
+                "OK",
+                "VEHICULOS_POR_SUCURSAL",
+                datos);
         }
 
         private string ProcesarRegistrarVenta(string[] partes)
         {
-            ValidarCantidadMinimaPartes(partes, 4, "La solicitud de registro de venta requiere idCliente, idSucursal e idVehiculo.");
+            ValidarCantidadMinimaPartes(partes, 4, "La solicitud VENTA requiere idCliente, idSucursal e idVehiculo.");
 
             int idCliente = ObtenerEnteroRequerido(partes[1], "El id del cliente no es válido.");
             int idSucursal = ObtenerEnteroRequerido(partes[2], "El id de la sucursal no es válido.");
@@ -175,12 +177,8 @@ namespace AutoMarket.Servidor.Comunicacion
 
             return string.Join("|",
                 "OK",
-                "VENTA_REGISTRADA",
-                idVentaGenerado.ToString(CultureInfo.InvariantCulture),
-                idCliente.ToString(CultureInfo.InvariantCulture),
-                idSucursal.ToString(CultureInfo.InvariantCulture),
-                idVehiculo.ToString(CultureInfo.InvariantCulture),
-                vehiculo.Precio.ToString(CultureInfo.InvariantCulture));
+                "VENTA",
+                idVentaGenerado.ToString(CultureInfo.InvariantCulture));
         }
 
         private string ProcesarObtenerVentasPorCliente(string[] partes)
@@ -190,18 +188,12 @@ namespace AutoMarket.Servidor.Comunicacion
             int idCliente = ObtenerEnteroRequerido(partes[1], "El id del cliente no es válido.");
 
             List<Venta> ventas = _ventaLogica.ObtenerPorCliente(idCliente);
+            string datos = UnirRegistros(ventas.Select(FormatearVenta));
 
-            StringBuilder respuesta = new StringBuilder();
-            respuesta.Append("OK|VENTAS_POR_CLIENTE|");
-            respuesta.Append(ventas.Count.ToString(CultureInfo.InvariantCulture));
-
-            foreach (Venta venta in ventas)
-            {
-                respuesta.Append("|");
-                respuesta.Append(FormatearVenta(venta));
-            }
-
-            return respuesta.ToString();
+            return string.Join("|",
+                "OK",
+                "VENTAS_POR_CLIENTE",
+                datos);
         }
 
         private string ProcesarObtenerClientePorId(string[] partes)
@@ -218,13 +210,8 @@ namespace AutoMarket.Servidor.Comunicacion
 
             return string.Join("|",
                 "OK",
-                "CLIENTE",
-                cliente.IdCliente.ToString(CultureInfo.InvariantCulture),
-                EscaparCampo(cliente.Identificacion),
-                EscaparCampo(cliente.NombreCompleto),
-                cliente.FechaNacimiento.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-                cliente.FechaRegistro.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-                cliente.Activo ? "1" : "0");
+                "CLIENTE_POR_ID",
+                FormatearCliente(cliente));
         }
 
         private string ProcesarObtenerVehiculoPorId(string[] partes)
@@ -246,16 +233,8 @@ namespace AutoMarket.Servidor.Comunicacion
 
             return string.Join("|",
                 "OK",
-                "VEHICULO",
-                vehiculo.IdVehiculo.ToString(CultureInfo.InvariantCulture),
-                EscaparCampo(vehiculo.Marca),
-                EscaparCampo(vehiculo.Modelo),
-                vehiculo.Ano.ToString(CultureInfo.InvariantCulture),
-                vehiculo.Precio.ToString(CultureInfo.InvariantCulture),
-                vehiculo.Estado.ToString(),
-                vehiculo.Categoria.IdCategoria.ToString(CultureInfo.InvariantCulture),
-                EscaparCampo(vehiculo.Categoria.NombreCategoria),
-                EscaparCampo(vehiculo.Categoria.Descripcion));
+                "VEHICULO_POR_ID",
+                FormatearVehiculo(vehiculo));
         }
 
         private void ValidarCantidadMinimaPartes(string[] partes, int cantidadMinima, string mensajeError)
@@ -264,18 +243,6 @@ namespace AutoMarket.Servidor.Comunicacion
             {
                 throw new ArgumentException(mensajeError);
             }
-        }
-
-        private string ObtenerTextoRequerido(string valor, string mensajeError)
-        {
-            string texto = valor?.Trim() ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(texto))
-            {
-                throw new ArgumentException(mensajeError);
-            }
-
-            return texto;
         }
 
         private int ObtenerEnteroRequerido(string valor, string mensajeError)
@@ -290,9 +257,35 @@ namespace AutoMarket.Servidor.Comunicacion
             return resultado;
         }
 
+        private string UnirRegistros(IEnumerable<string> registros)
+        {
+            if (registros == null)
+            {
+                return string.Empty;
+            }
+
+            return string.Join(";", registros);
+        }
+
+        private string FormatearCliente(Cliente cliente)
+        {
+            return string.Join(",",
+                cliente.IdCliente.ToString(CultureInfo.InvariantCulture),
+                EscaparCampo(cliente.Identificacion),
+                EscaparCampo(cliente.NombreCompleto),
+                cliente.FechaNacimiento.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                cliente.FechaRegistro.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                cliente.Activo ? "1" : "0");
+        }
+
         private string FormatearSucursal(Sucursal sucursal)
         {
-            return string.Join("^",
+            if (sucursal == null)
+            {
+                throw new ArgumentNullException(nameof(sucursal), "La sucursal indicada no es válida.");
+            }
+
+            return string.Join(",",
                 sucursal.IdSucursal.ToString(CultureInfo.InvariantCulture),
                 EscaparCampo(sucursal.Nombre),
                 EscaparCampo(sucursal.Direccion),
@@ -301,6 +294,31 @@ namespace AutoMarket.Servidor.Comunicacion
                 sucursal.VendedorEncargado != null ? EscaparCampo(sucursal.VendedorEncargado.NombreCompleto) : string.Empty,
                 sucursal.VendedorEncargado != null ? EscaparCampo(sucursal.VendedorEncargado.Identificacion) : string.Empty,
                 sucursal.Activo ? "1" : "0");
+        }
+
+        private string FormatearVehiculo(Vehiculo vehiculo)
+        {
+            if (vehiculo == null)
+            {
+                throw new ArgumentNullException(nameof(vehiculo), "El vehículo indicado no es válido.");
+            }
+
+            if (vehiculo.Categoria == null)
+            {
+                throw new InvalidOperationException("El vehículo indicado no tiene una categoría asociada válida.");
+            }
+
+            return string.Join(",",
+                vehiculo.IdVehiculo.ToString(CultureInfo.InvariantCulture),
+                EscaparCampo(vehiculo.Marca),
+                EscaparCampo(vehiculo.Modelo),
+                vehiculo.Ano.ToString(CultureInfo.InvariantCulture),
+                vehiculo.Precio.ToString(CultureInfo.InvariantCulture),
+                vehiculo.Estado.ToString(),
+                EscaparCampo(vehiculo.EstadoDescripcion),
+                vehiculo.Categoria.IdCategoria.ToString(CultureInfo.InvariantCulture),
+                EscaparCampo(vehiculo.Categoria.NombreCategoria),
+                EscaparCampo(vehiculo.Categoria.Descripcion));
         }
 
         private string FormatearVehiculoxSucursal(VehiculoxSucursal vehiculoxSucursal)
@@ -327,7 +345,7 @@ namespace AutoMarket.Servidor.Comunicacion
                 throw new InvalidOperationException("El inventario consultado contiene un vehículo sin categoría válida.");
             }
 
-            return string.Join("^",
+            return string.Join(",",
                 vehiculoxSucursal.Sucursal.IdSucursal.ToString(CultureInfo.InvariantCulture),
                 vehiculo.IdVehiculo.ToString(CultureInfo.InvariantCulture),
                 EscaparCampo(vehiculo.Marca),
@@ -359,7 +377,7 @@ namespace AutoMarket.Servidor.Comunicacion
                 throw new InvalidOperationException("La venta consultada contiene un vehículo sin categoría válida.");
             }
 
-            return string.Join("^",
+            return string.Join(",",
                 venta.IdVenta.ToString(CultureInfo.InvariantCulture),
                 venta.Cliente.IdCliente.ToString(CultureInfo.InvariantCulture),
                 EscaparCampo(venta.Cliente.NombreCompleto),
@@ -384,8 +402,9 @@ namespace AutoMarket.Servidor.Comunicacion
         {
             string texto = valor?.Trim() ?? string.Empty;
 
-            texto = texto.Replace("^", "/");
             texto = texto.Replace("|", "/");
+            texto = texto.Replace(";", "/");
+            texto = texto.Replace(",", "/");
             texto = texto.Replace("\r", " ");
             texto = texto.Replace("\n", " ");
 
