@@ -1,7 +1,7 @@
 ﻿/*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #1
+Proyecto: AutoMarket - Proyecto #2
 Descripción: Clase encargada de interpretar solicitudes TCP del cliente y generar respuestas protocolarias del servidor.
 Estudiante: Jorge Arias
 Fecha de desarrollo: 2026-02-06

@@ -1,7 +1,7 @@
 ﻿/*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #1
+Proyecto: AutoMarket - Proyecto #2
 Descripción: Clase encargada de administrar la comunicación TCP de un cliente conectado, procesando solicitudes, devolviendo respuestas y notificando eventos del sistema.
 Estudiante: Jorge Arias
 Fecha de desarrollo: 2026-02-06

@@ -1,10 +1,10 @@
 /*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #1
-Descripción: Punto de entrada principal de la aplicación servidor.
+Proyecto: AutoMarket - Proyecto #2
+Descripción: Punto de entrada principal de la aplicación servidor de AutoMarket.
 Estudiante: Jorge Arias
-Fecha de desarrollo: 2026-02-09
+Fecha de desarrollo: 2026-02-12
 */
 
 using System;
@@ -25,12 +25,20 @@ namespace AutoMarket.Servidor.Presentacion
                 ConexionSqlServer conexionSqlServer = new ConexionSqlServer();
                 conexionSqlServer.ProbarConexion();
 
-                Application.Run(new FrmServidorPrincipal());
+                FrmServidorPrincipal frmServidorPrincipal = new FrmServidorPrincipal();
+                ControladorServidor controladorServidor = new ControladorServidor(frmServidorPrincipal);
+
+                frmServidorPrincipal.FormClosed += (sender, e) =>
+                {
+                    controladorServidor.DetenerServidorSiEstaActivo();
+                };
+
+                Application.Run(frmServidorPrincipal);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Error al conectar con la base de datos:{Environment.NewLine}{ex.Message}",
+                    $"Error al iniciar la aplicación del servidor.{Environment.NewLine}{Environment.NewLine}Detalle: {ex.Message}",
                     "AutoMarket",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);

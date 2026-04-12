@@ -1,7 +1,7 @@
 ﻿/*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #1
+Proyecto: AutoMarket - Proyecto #2
 Descripción: Clase encargada de iniciar, administrar y detener el servidor TCP de AutoMarket, aceptando múltiples clientes concurrentes y notificando eventos del sistema.
 Estudiante: Jorge Arias
 Fecha de desarrollo: 2026-02-11
