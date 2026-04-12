@@ -15,8 +15,8 @@ namespace AutoMarket.Servidor.Presentacion
 {
     public partial class FrmServidorPrincipal : Form
     {
-        public event EventHandler SolicitudIniciarServidor;
-        public event EventHandler SolicitudDetenerServidor;
+        public event EventHandler? SolicitudIniciarServidor;
+        public event EventHandler? SolicitudDetenerServidor;
 
         public FrmServidorPrincipal()
         {

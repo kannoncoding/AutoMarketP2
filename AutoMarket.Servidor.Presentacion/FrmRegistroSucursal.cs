@@ -156,7 +156,11 @@ namespace AutoMarket.Servidor.Presentacion
             string nombre = txtNombreSucursal.Text.Trim();
             string direccion = txtDireccion.Text.Trim();
             string telefono = txtTelefono.Text.Trim();
-            Vendedor vendedorEncargado = (Vendedor)cmbVendedorEncargado.SelectedItem;
+            Vendedor? vendedorEncargado = cmbVendedorEncargado.SelectedItem as Vendedor;
+            if (vendedorEncargado == null)
+            {
+                throw new InvalidOperationException("Debe seleccionar un vendedor válido.");
+            }
             bool activo = chkActivo.Checked;
 
             return new Sucursal(
