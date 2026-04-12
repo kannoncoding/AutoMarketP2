@@ -75,12 +75,6 @@ namespace AutoMarket.Servidor.Logica
                 throw new InvalidOperationException("El vehículo indicado no existe.");
             }
 
-            bool tieneStock = _vehiculoxSucursalDatos.TieneStock(sucursal.IdSucursal, vehiculo.IdVehiculo);
-            if (!tieneStock)
-            {
-                throw new InvalidOperationException("No hay stock disponible para el vehículo seleccionado en la sucursal indicada.");
-            }
-
             Venta ventaPreparada = new Venta(
                 clienteActivo,
                 sucursal,
@@ -259,21 +253,6 @@ namespace AutoMarket.Servidor.Logica
 
             return clientePorId ?? clientePorIdentificacion
                 ?? throw new InvalidOperationException("La venta debe incluir un cliente válido y activo.");
-        }
-
-        private void ValidarVentaPersistida(Venta venta)
-        {
-            ValidarVenta(venta);
-
-            if (venta.IdVenta <= 0)
-            {
-                throw new ArgumentException("La venta debe tener un id válido para ser actualizada.");
-            }
-
-            if (venta.Monto <= 0)
-            {
-                throw new ArgumentException("El monto de la venta debe ser mayor que cero.");
-            }
         }
     }
 }
