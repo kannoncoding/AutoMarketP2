@@ -25,7 +25,7 @@ namespace AutoMarket.Servidor.Presentacion
                 ConexionSqlServer conexionSqlServer = new ConexionSqlServer();
                 conexionSqlServer.ProbarConexion();
 
-                Application.Run(new Form1());
+                Application.Run(new FrmServidorPrincipal());
             }
             catch (Exception ex)
             {

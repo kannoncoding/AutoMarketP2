@@ -2,9 +2,9 @@
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
 Proyecto: AutoMarket - Proyecto #1
-Descripción: Formulario principal administrativo del servidor para iniciar y detener el servicio TCP, visualizar el estado general, mostrar la bitácora de eventos y navegar a los módulos del sistema.
+Descripción: Formulario principal administrativo del servidor para iniciar o detener el servicio TCP, visualizar el estado general, registrar eventos en bitácora y navegar hacia los módulos de mantenimiento y consulta del sistema AutoMarket.
 Estudiante: Jorge Arias
-Fecha de desarrollo: 2026-02-09
+Fecha de desarrollo: 2026-02-12
 */
 
 using System;
@@ -29,59 +29,40 @@ namespace AutoMarket.Servidor.Presentacion
         {
             Text = "AutoMarket - Servidor Principal";
             StartPosition = FormStartPosition.CenterScreen;
-            MaximizeBox = false;
-            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MinimumSize = new Size(1300, 780);
         }
 
         private void ConfigurarEstadoInicial()
         {
-            ActualizarEstadoServidor(false);
-            ActualizarCantidadClientes(0);
-            RegistrarEvento("Sistema iniciado. Interfaz administrativa lista.");
+            ActualizarEstadoServidor(false, "🔴 Servidor detenido");
+            AgregarEventoBitacora("Sistema listo. El servidor aún no ha sido iniciado.");
         }
 
-        public void ActualizarEstadoServidor(bool servidorActivo)
+        public void ActualizarEstadoServidor(bool servidorActivo, string mensajeEstado)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<bool>(ActualizarEstadoServidor), servidorActivo);
+                Invoke(new Action<bool, string>(ActualizarEstadoServidor), servidorActivo, mensajeEstado);
                 return;
             }
 
-            lblEstadoValor.Text = servidorActivo ? "ACTIVO" : "DETENIDO";
+            lblEstadoValor.Text = mensajeEstado;
             lblEstadoValor.ForeColor = servidorActivo ? Color.ForestGreen : Color.Firebrick;
-
-            pnlIndicadorEstado.BackColor = servidorActivo ? Color.ForestGreen : Color.Firebrick;
 
             btnIniciarServidor.Enabled = !servidorActivo;
             btnDetenerServidor.Enabled = servidorActivo;
         }
 
-        public void ActualizarCantidadClientes(int cantidadClientes)
+        public void AgregarEventoBitacora(string mensaje)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<int>(ActualizarCantidadClientes), cantidadClientes);
+                Invoke(new Action<string>(AgregarEventoBitacora), mensaje);
                 return;
             }
 
-            lblClientesValor.Text = cantidadClientes.ToString();
-        }
-
-        public void RegistrarEvento(string mensaje)
-        {
-            if (InvokeRequired)
-            {
-                Invoke(new Action<string>(RegistrarEvento), mensaje);
-                return;
-            }
-
-            string linea = string.Format(
-                "[{0}] {1}",
-                DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
-                mensaje);
-
-            txtBitacora.AppendText(linea + Environment.NewLine);
+            string fechaHora = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+            txtBitacora.AppendText($"[{fechaHora}] {mensaje}{Environment.NewLine}");
         }
 
         public void LimpiarBitacora()
@@ -93,7 +74,30 @@ namespace AutoMarket.Servidor.Presentacion
             }
 
             txtBitacora.Clear();
-            RegistrarEvento("Bitácora limpiada por el administrador.");
+            AgregarEventoBitacora("La bitácora fue limpiada por el administrador.");
+        }
+
+        public void EstablecerCantidadConexiones(int cantidadConexiones)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<int>(EstablecerCantidadConexiones), cantidadConexiones);
+                return;
+            }
+
+            lblConexionesValor.Text = cantidadConexiones.ToString();
+        }
+
+        public void EstablecerDireccionEscucha(string direccionIp, int puerto)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string, int>(EstablecerDireccionEscucha), direccionIp, puerto);
+                return;
+            }
+
+            lblDireccionValor.Text = direccionIp;
+            lblPuertoValor.Text = puerto.ToString();
         }
 
         private void btnIniciarServidor_Click(object sender, EventArgs e)
@@ -105,12 +109,12 @@ namespace AutoMarket.Servidor.Presentacion
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Ocurrió un error al intentar iniciar el servidor.\n\n" + ex.Message,
+                    $"Ocurrió un error al solicitar el inicio del servidor.\n\nDetalle: {ex.Message}",
                     "Error al iniciar servidor",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
-                RegistrarEvento("Error al iniciar el servidor: " + ex.Message);
+                AgregarEventoBitacora($"Error al solicitar inicio del servidor: {ex.Message}");
             }
         }
 
@@ -123,12 +127,12 @@ namespace AutoMarket.Servidor.Presentacion
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Ocurrió un error al intentar detener el servidor.\n\n" + ex.Message,
+                    $"Ocurrió un error al solicitar la detención del servidor.\n\nDetalle: {ex.Message}",
                     "Error al detener servidor",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
-                RegistrarEvento("Error al detener el servidor: " + ex.Message);
+                AgregarEventoBitacora($"Error al solicitar detención del servidor: {ex.Message}");
             }
         }
 
@@ -137,7 +141,7 @@ namespace AutoMarket.Servidor.Presentacion
             try
             {
                 DialogResult resultado = MessageBox.Show(
-                    "¿Desea limpiar la bitácora de eventos?",
+                    "¿Desea limpiar completamente la bitácora de eventos?",
                     "Confirmar limpieza",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
@@ -150,12 +154,10 @@ namespace AutoMarket.Servidor.Presentacion
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Ocurrió un error al limpiar la bitácora.\n\n" + ex.Message,
-                    "Error al limpiar bitácora",
+                    $"Ocurrió un error al limpiar la bitácora.\n\nDetalle: {ex.Message}",
+                    "Error de bitácora",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-
-                RegistrarEvento("Error al limpiar la bitácora: " + ex.Message);
             }
         }
 
@@ -165,7 +167,7 @@ namespace AutoMarket.Servidor.Presentacion
             {
                 DialogResult resultado = MessageBox.Show(
                     "¿Desea cerrar la aplicación del servidor?",
-                    "Confirmar salida",
+                    "Salir del sistema",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
 
@@ -177,101 +179,121 @@ namespace AutoMarket.Servidor.Presentacion
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Ocurrió un error al cerrar la aplicación.\n\n" + ex.Message,
+                    $"Ocurrió un error al intentar cerrar la aplicación.\n\nDetalle: {ex.Message}",
                     "Error al salir",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-
-                RegistrarEvento("Error al cerrar la aplicación: " + ex.Message);
             }
         }
 
         private void btnRegistroCategoriaVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Registro de Categoría de Vehículo");
+            AbrirFormularioModulo("Registro de Categoría de Vehículo");
         }
 
         private void btnRegistroVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Registro de Vehículo");
+            AbrirFormularioModulo("Registro de Vehículo");
         }
 
         private void btnRegistroVendedor_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Registro de Vendedor");
+            AbrirFormularioModulo("Registro de Vendedor");
         }
 
         private void btnRegistroSucursal_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Registro de Sucursal");
+            AbrirFormularioModulo("Registro de Sucursal");
         }
 
         private void btnRegistroCliente_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Registro de Cliente");
+            AbrirFormularioModulo("Registro de Cliente");
         }
 
         private void btnRegistroVehiculoXSucursal_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Registro de Vehículo por Sucursal");
+            AbrirFormularioModulo("Registro de Vehículo por Sucursal");
         }
 
         private void btnConsultaSucursal_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Consulta de Sucursal");
+            AbrirFormularioModulo("Consulta de Sucursal");
         }
 
         private void btnConsultaVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Consulta de Vehículo");
+            AbrirFormularioModulo("Consulta de Vehículo");
         }
 
         private void btnConsultaVehiculoXSucursal_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Consulta de Vehículo por Sucursal");
+            AbrirFormularioModulo("Consulta de Vehículo por Sucursal");
         }
 
         private void btnConsultaCategoriaVehiculo_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Consulta de Categoría de Vehículo");
+            AbrirFormularioModulo("Consulta de Categoría de Vehículo");
         }
 
         private void btnConsultaVendedor_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Consulta de Vendedor");
+            AbrirFormularioModulo("Consulta de Vendedor");
         }
 
         private void btnConsultaCliente_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Consulta de Cliente");
+            AbrirFormularioModulo("Consulta de Cliente");
         }
 
         private void btnConsultaVenta_Click(object sender, EventArgs e)
         {
-            AbrirModuloNoImplementado("Consulta de Venta");
+            AbrirFormularioModulo("Consulta de Venta");
         }
 
-        private void AbrirModuloNoImplementado(string nombreModulo)
+        private void AbrirFormularioModulo(string nombreModulo)
         {
             try
             {
                 MessageBox.Show(
-                    "El módulo \"" + nombreModulo + "\" se conectará cuando construyamos ese formulario.",
-                    "Módulo pendiente",
+                    $"Más adelante aquí se abrirá el módulo:\n\n{nombreModulo}",
+                    "Módulo en preparación",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
 
-                RegistrarEvento("Intento de acceso al módulo: " + nombreModulo + ".");
+                AgregarEventoBitacora($"El administrador abrió el acceso al módulo: {nombreModulo}.");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Ocurrió un error al abrir el módulo.\n\n" + ex.Message,
-                    "Error de navegación",
+                    $"Ocurrió un error al intentar abrir el módulo.\n\nDetalle: {ex.Message}",
+                    "Error al abrir módulo",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+            }
+        }
 
-                RegistrarEvento("Error al abrir módulo " + nombreModulo + ": " + ex.Message);
+        private void FrmServidorPrincipal_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            try
+            {
+                if (btnDetenerServidor.Enabled)
+                {
+                    DialogResult resultado = MessageBox.Show(
+                        "El servidor parece estar activo. ¿Desea cerrar la aplicación de todos modos?",
+                        "Servidor en ejecución",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (resultado == DialogResult.No)
+                    {
+                        e.Cancel = true;
+                    }
+                }
+            }
+            catch
+            {
+                e.Cancel = false;
             }
         }
     }
