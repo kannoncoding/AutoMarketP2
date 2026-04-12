@@ -1,10 +1,10 @@
 ﻿/*
 Universidad: UNED
 Cuatrimestre: I Cuatrimestre 2026
-Proyecto: AutoMarket - Proyecto #2
+Proyecto: AutoMarket - Proyecto #1
 Descripción: Clase encargada de iniciar, administrar y detener el servidor TCP de AutoMarket, aceptando múltiples clientes concurrentes y notificando eventos del sistema.
-Estudiante: Jorge Arias M
-Fecha de desarrollo: 2026-04-06
+Estudiante: Jorge Arias
+Fecha de desarrollo: 2026-02-11
 */
 
 using System;
@@ -107,14 +107,18 @@ namespace AutoMarket.Servidor.Comunicacion
                 }
                 catch (SocketException ex)
                 {
+                    _tcpListener = null;
                     throw new InvalidOperationException("No fue posible iniciar el servidor TCP en la dirección y puerto configurados.", ex);
                 }
 
                 _estaEnEjecucion = true;
 
-                _hiloEscucha = new Thread(EscucharClientes);
-                _hiloEscucha.IsBackground = true;
-                _hiloEscucha.Name = "HiloEscuchaServidorTcp";
+                _hiloEscucha = new Thread(EscucharClientes)
+                {
+                    IsBackground = true,
+                    Name = "HiloEscuchaServidorTcp"
+                };
+
                 _hiloEscucha.Start();
             }
 
@@ -123,14 +127,17 @@ namespace AutoMarket.Servidor.Comunicacion
 
         public void Detener()
         {
+            bool estabaEnEjecucion;
+
             lock (_bloqueoEstado)
             {
-                if (!_estaEnEjecucion)
-                {
-                    return;
-                }
-
+                estabaEnEjecucion = _estaEnEjecucion;
                 _estaEnEjecucion = false;
+            }
+
+            if (!estabaEnEjecucion)
+            {
+                return;
             }
 
             try
@@ -154,12 +161,17 @@ namespace AutoMarket.Servidor.Comunicacion
             {
             }
 
+            _tcpListener = null;
+            _hiloEscucha = null;
+
             NotificarEvento("Servidor TCP detenido.");
         }
 
         private void EscucharClientes()
         {
-            if (_tcpListener == null)
+            TcpListener? listenerLocal = _tcpListener;
+
+            if (listenerLocal == null)
             {
                 NotificarEvento("No se pudo iniciar la escucha de clientes porque el listener TCP no está inicializado.");
                 return;
@@ -171,7 +183,7 @@ namespace AutoMarket.Servidor.Comunicacion
 
                 try
                 {
-                    cliente = _tcpListener.AcceptTcpClient();
+                    cliente = listenerLocal.AcceptTcpClient();
 
                     lock (_bloqueoClientes)
                     {
@@ -185,9 +197,12 @@ namespace AutoMarket.Servidor.Comunicacion
                     manejadorCliente.EventoComunicacion += ManejarEventoCliente;
                     manejadorCliente.ClienteDesconectado += ManejarClienteDesconectado;
 
-                    Thread hiloCliente = new Thread(manejadorCliente.ProcesarCliente);
-                    hiloCliente.IsBackground = true;
-                    hiloCliente.Name = "HiloClienteTcp_" + direccionRemota.Replace(":", "_");
+                    Thread hiloCliente = new Thread(manejadorCliente.ProcesarCliente)
+                    {
+                        IsBackground = true,
+                        Name = "HiloClienteTcp_" + NormalizarTextoParaNombreHilo(direccionRemota)
+                    };
+
                     hiloCliente.Start();
                 }
                 catch (SocketException ex)
@@ -212,6 +227,11 @@ namespace AutoMarket.Servidor.Comunicacion
                     {
                         try
                         {
+                            lock (_bloqueoClientes)
+                            {
+                                _clientesConectados.Remove(cliente);
+                            }
+
                             cliente.Close();
                         }
                         catch
@@ -298,6 +318,24 @@ namespace AutoMarket.Servidor.Comunicacion
             }
 
             return "Cliente desconocido";
+        }
+
+        private string NormalizarTextoParaNombreHilo(string texto)
+        {
+            string textoNormalizado = texto?.Trim() ?? "Cliente";
+
+            textoNormalizado = textoNormalizado.Replace(":", "_");
+            textoNormalizado = textoNormalizado.Replace(".", "_");
+            textoNormalizado = textoNormalizado.Replace("/", "_");
+            textoNormalizado = textoNormalizado.Replace("\\", "_");
+            textoNormalizado = textoNormalizado.Replace(" ", "_");
+
+            if (string.IsNullOrWhiteSpace(textoNormalizado))
+            {
+                return "Cliente";
+            }
+
+            return textoNormalizado;
         }
 
         private void NotificarEvento(string mensaje)
